@@ -1,10 +1,17 @@
 name: Test AML Pipeline
 on:
+  push:
+    branches:
+      - claude/review-shared-conversation-n0GQN
+    paths:
+      - 'test_pipeline_deltex.py'
+      - '.github/workflows/test_pipeline.yml'
   workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -12,7 +19,4 @@ jobs:
           python-version: '3.11'
       - run: pip install requests
       - name: Run Pipeline Test
-        env:
-          CHAINALYSIS_KYT_KEY: ${{ secrets.CHAINALYSIS_KYT_KEY }}
-          CHAINALYSIS_SANCTIONS_KEY: ${{ secrets.CHAINALYSIS_SANCTIONS_KEY }}
         run: python3 test_pipeline_deltex.py
