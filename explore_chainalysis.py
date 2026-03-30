@@ -431,10 +431,67 @@ def s8_sanctions():
 
 
 # ════════════════════════════════════════════════════════════
-# 9. DEEP DIVE — Exposures detallado de transfers
+# 9. ADDRESS SCREENING API — Cluster directo por wallet
+#    API SEPARADA de KYT. Retorna cluster.name, cluster.category,
+#    risk level, y exposures directas/indirectas de cualquier address.
+#    ESTO ES LO MÁS IMPORTANTE PARA EL BACKWARD TRACE.
 # ════════════════════════════════════════════════════════════
-def s9_deep_dive(eids):
-    section(9, "DEEP DIVE — EXPOSURES COMPLETO",
+def s9_address_screening():
+    section(9, "ADDRESS SCREENING API (api/risk/v2)",
+            "API separada de KYT. Retorna cluster + risk + exposures de cualquier wallet.")
+
+    # Probar primero registrar y luego consultar
+    addrs = [
+        (ECO_ADDR, "Ecoexports dest wallet"),
+        (DEL_ADDR, "DELTEX dest wallet"),
+    ]
+
+    for addr, desc in addrs:
+        print(f"\n{SUBSEP}")
+        print(f"  {desc}: {addr}")
+        print(SUBSEP)
+
+        # Método 1: POST para registrar + GET para consultar
+        print(f"\n▸ POST /api/risk/v2/entities — Registrar address")
+        code, data = api("POST", "/api/risk/v2/entities", json_data={"address": addr})
+        print(f"  Status: {code}")
+        pj(data)
+
+        print(f"\n▸ GET /api/risk/v2/entities/{addr} — Cluster + Risk + Exposures")
+        code, data = api("GET", f"/api/risk/v2/entities/{addr}")
+        print(f"  Status: {code}")
+        pj(data, max_lines=80)
+
+        # Método 2: probar path alternativo
+        print(f"\n▸ GET /api/risk/v2/entities/{addr}?network=TRON — Con network param")
+        code, data = api("GET", f"/api/risk/v2/entities/{addr}", params={"network": "TRON"})
+        print(f"  Status: {code}")
+        pj(data, max_lines=40)
+
+    # Probar endpoint discovery dentro de risk API
+    print(f"\n{SUBSEP}")
+    print(f"  Discovery: endpoints de /api/risk/")
+    print(SUBSEP)
+
+    risk_endpoints = [
+        ("GET", "/api/risk/v2/entities", "List entities"),
+        ("GET", "/api/risk/v2/categories", "Risk categories"),
+        ("GET", "/api/risk/v2/clusters", "Clusters"),
+        ("GET", "/api/risk/v1/entities", "V1 entities"),
+    ]
+    for method, path, desc in risk_endpoints:
+        code, data = api(method, path, quiet=True)
+        status = "✅" if code in (200, 201, 202) else f"[{code}]"
+        print(f"  {status} {desc}: {method} {path}")
+        if code in (200, 201, 202):
+            pj(data, max_lines=15)
+
+
+# ════════════════════════════════════════════════════════════
+# 10. DEEP DIVE — Exposures detallado de transfers
+# ════════════════════════════════════════════════════════════
+def s10_deep_dive(eids):
+    section(10, "DEEP DIVE — EXPOSURES COMPLETO",
             "Todas las variaciones de consulta de exposures por transfer")
 
     for label, eid in eids.items():
@@ -539,9 +596,13 @@ def main():
     if target in ("all", "8", "sanctions"):
         s8_sanctions()
 
+    # Address Screening API (CLUSTERS!)
+    if target in ("all", "9", "address", "screening"):
+        s9_address_screening()
+
     # Deep dive
-    if target in ("all", "9", "deep"):
-        s9_deep_dive(eids)
+    if target in ("all", "10", "deep"):
+        s10_deep_dive(eids)
 
     print(f"""
 {SEP}
@@ -563,7 +624,8 @@ def main():
     6/alerts      — Alertas globales
     7/discovery   — Buscar endpoints ocultos
     8/sanctions   — API de sanciones OFAC
-    9/deep        — Deep dive exposures
+    9/address     — ADDRESS SCREENING API (cluster + risk por wallet!)
+    10/deep       — Deep dive exposures
 
   GUARDAR OUTPUT:
     python3 explore_chainalysis.py > chainalysis_exploration.txt 2>&1
