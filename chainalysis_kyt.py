@@ -47,35 +47,55 @@ class ChainalysisKYT:
 
     # ── HTTP helpers ───────────────────────────────────────
 
-    def _get(self, path: str, params: dict = None) -> tuple:
-        """GET request. Returns (status_code, data)."""
+    def _request_with_retry(self, method: str, path: str,
+                            payload: dict = None, params: dict = None,
+                            retries: int = 3) -> tuple:
+        """HTTP request con retry y backoff. Returns (status_code, data)."""
         url = f"{self.KYT_BASE}{path}"
-        try:
-            r = requests.get(url, headers=self.headers,
-                           params=params, timeout=self.timeout)
-            logger.debug(f"[{r.status_code}] GET {path}")
-            return r.status_code, self._parse_response(r)
-        except requests.exceptions.Timeout:
-            logger.error(f"Timeout: GET {path}")
-            return 0, {"_error": "timeout"}
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Request error: GET {path} → {e}")
-            return 0, {"_error": "request_exception", "_detail": str(e)}
+
+        for attempt in range(retries):
+            try:
+                if method == "GET":
+                    r = requests.get(url, headers=self.headers,
+                                   params=params, timeout=self.timeout)
+                elif method == "POST":
+                    r = requests.post(url, headers=self.headers,
+                                    json=payload, timeout=self.timeout)
+                else:
+                    return 0, {"_error": f"Unsupported method: {method}"}
+
+                logger.debug(f"[{r.status_code}] {method} {path}")
+
+                # Retry en errores de servidor o rate limit
+                if r.status_code in (429, 500, 502, 503, 504) and attempt < retries - 1:
+                    wait = 2 ** (attempt + 1)
+                    logger.warning(f"Chainalysis {r.status_code}, retrying in {wait}s...")
+                    time.sleep(wait)
+                    continue
+
+                return r.status_code, self._parse_response(r)
+
+            except requests.exceptions.Timeout:
+                if attempt < retries - 1:
+                    wait = 2 ** (attempt + 1)
+                    logger.warning(f"Chainalysis timeout, retrying in {wait}s...")
+                    time.sleep(wait)
+                    continue
+                logger.error(f"Timeout after {retries} attempts: {method} {path}")
+                return 0, {"_error": "timeout"}
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Request error: {method} {path} → {e}")
+                return 0, {"_error": "request_exception", "_detail": str(e)}
+
+        return 0, {"_error": "max_retries_exceeded"}
+
+    def _get(self, path: str, params: dict = None) -> tuple:
+        """GET request con retry."""
+        return self._request_with_retry("GET", path, params=params)
 
     def _post(self, path: str, payload: dict) -> tuple:
-        """POST request. Returns (status_code, data)."""
-        url = f"{self.KYT_BASE}{path}"
-        try:
-            r = requests.post(url, headers=self.headers,
-                            json=payload, timeout=self.timeout)
-            logger.debug(f"[{r.status_code}] POST {path}")
-            return r.status_code, self._parse_response(r)
-        except requests.exceptions.Timeout:
-            logger.error(f"Timeout: POST {path}")
-            return 0, {"_error": "timeout"}
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Request error: POST {path} → {e}")
-            return 0, {"_error": "request_exception", "_detail": str(e)}
+        """POST request con retry."""
+        return self._request_with_retry("POST", path, payload=payload)
 
     def _parse_response(self, r) -> dict:
         if r.status_code == 204:
@@ -597,3 +617,208 @@ class ChainalysisKYT:
                 time.sleep(delay)
 
         return results
+
+
+class ChainalysisReactor:
+    """
+    Cliente para Chainalysis Investigations API (IAPI / Reactor).
+    Producto SEPARADO de KYT — requiere licencia de Reactor.
+
+    Si Vectora tiene Reactor, este cliente da acceso a:
+    - Cluster info completo (nombre, categoría, todas las addresses)
+    - Counterparties de un cluster
+    - Exposure por categoría y por servicio
+    - Transacciones y detalles
+    - Observaciones por IP/país
+
+    Base URL: https://iapi.chainalysis.com
+    Auth: x-api-key header
+    Rate limit: 5000 requests / 5 minutos
+    """
+
+    BASE_URL = "https://iapi.chainalysis.com"
+
+    def __init__(self, api_key: str, timeout: int = 30):
+        self.api_key = api_key
+        self.timeout = timeout
+        self.headers = {
+            "x-api-key": api_key,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+
+    def _get(self, path: str, params: dict = None) -> tuple:
+        """GET request con retry."""
+        url = f"{self.BASE_URL}{path}"
+        for attempt in range(3):
+            try:
+                r = requests.get(url, headers=self.headers,
+                               params=params, timeout=self.timeout)
+                logger.debug(f"[Reactor {r.status_code}] GET {path}")
+                if r.status_code in (429, 500, 502, 503, 504) and attempt < 2:
+                    time.sleep(2 ** (attempt + 1))
+                    continue
+                if r.status_code == 200:
+                    return r.status_code, r.json()
+                return r.status_code, r.text
+            except requests.exceptions.RequestException as e:
+                if attempt < 2:
+                    time.sleep(2 ** (attempt + 1))
+                    continue
+                return 0, {"_error": str(e)}
+        return 0, {"_error": "max_retries"}
+
+    def is_available(self) -> bool:
+        """Verifica si tenemos acceso a Reactor IAPI."""
+        if not self.api_key:
+            return False
+        code, _ = self._get("/clusters/TJLQc8drrf9ZWQcwWjkuA96eCkmPSye8pT",
+                            params={"asset": "TRON"})
+        return code == 200
+
+    # ── Cluster endpoints ──────────────────────────────────
+
+    def get_cluster_info(self, address: str, asset: str = "TRON") -> dict:
+        """
+        Obtiene nombre y categoría del cluster de una dirección.
+
+        Returns:
+            {"name": "Binance", "category": "exchange", ...}
+        """
+        code, data = self._get(f"/clusters/{address}", params={"asset": asset})
+        if code != 200:
+            logger.warning(f"Reactor cluster info [{code}] for {address[:16]}")
+            return {"_error": code, "_body": data}
+        return data
+
+    def get_cluster_addresses(self, address: str, asset: str = "TRON",
+                              limit: int = 100, offset: int = 0) -> dict:
+        """Obtiene todas las addresses de un cluster."""
+        code, data = self._get(
+            f"/clusters/{address}/addresses",
+            params={"asset": asset, "size": limit, "offset": offset}
+        )
+        if code != 200:
+            return {"_error": code}
+        return data
+
+    def get_cluster_summary(self, address: str, asset: str = "TRON") -> dict:
+        """Balance y stats del cluster."""
+        code, data = self._get(
+            f"/clusters/{address}/summary",
+            params={"asset": asset}
+        )
+        if code != 200:
+            return {"_error": code}
+        return data
+
+    def get_cluster_counterparties(self, address: str, asset: str = "TRON",
+                                    direction: str = "sent") -> dict:
+        """
+        Counterparties de un cluster.
+        direction: "sent" o "received"
+        """
+        code, data = self._get(
+            f"/clusters/{address}/counterparties",
+            params={"asset": asset, "direction": direction}
+        )
+        if code != 200:
+            return {"_error": code}
+        return data
+
+    def get_cluster_transactions(self, address: str, asset: str = "TRON",
+                                  limit: int = 50) -> dict:
+        """Transacciones de un cluster."""
+        code, data = self._get(
+            f"/clusters/{address}/transactions",
+            params={"asset": asset, "size": limit}
+        )
+        if code != 200:
+            return {"_error": code}
+        return data
+
+    # ── Exposure endpoints ─────────────────────────────────
+
+    def get_exposure_by_category(self, address: str, asset: str = "TRON",
+                                  direction: str = "received") -> dict:
+        """
+        Exposure desglosada por categoría.
+        Ej: {darknet: 5%, exchange: 80%, gambling: 2%, ...}
+        """
+        code, data = self._get(
+            f"/clusters/{address}/exposure/category",
+            params={"asset": asset, "direction": direction}
+        )
+        if code != 200:
+            return {"_error": code}
+        return data
+
+    def get_exposure_by_service(self, address: str, asset: str = "TRON",
+                                 direction: str = "received") -> dict:
+        """
+        Exposure desglosada por servicio.
+        Ej: {Binance: 60%, OKX: 15%, Garantex: 5%, ...}
+        """
+        code, data = self._get(
+            f"/clusters/{address}/exposure/service",
+            params={"asset": asset, "direction": direction}
+        )
+        if code != 200:
+            return {"_error": code}
+        return data
+
+    # ── Transaction endpoints ──────────────────────────────
+
+    def get_tx_hashes_by_address(self, address: str,
+                                  asset: str = "TRON") -> dict:
+        """TX hashes de una dirección."""
+        code, data = self._get(
+            f"/addresses/{address}/transactions",
+            params={"asset": asset}
+        )
+        if code != 200:
+            return {"_error": code}
+        return data
+
+    def get_transaction_info(self, tx_hash: str,
+                             asset: str = "TRON") -> dict:
+        """Info básica de una TX."""
+        code, data = self._get(
+            f"/transactions/{tx_hash}",
+            params={"asset": asset}
+        )
+        if code != 200:
+            return {"_error": code}
+        return data
+
+    def get_transaction_details(self, tx_hash: str,
+                                asset: str = "TRON") -> dict:
+        """Detalle completo de una TX con inputs/outputs."""
+        code, data = self._get(
+            f"/transactions/{tx_hash}/details",
+            params={"asset": asset}
+        )
+        if code != 200:
+            return {"_error": code}
+        return data
+
+    # ── Método de conveniencia: investigación completa ─────
+
+    def investigate_address(self, address: str,
+                            asset: str = "TRON") -> dict:
+        """
+        Investigación completa de una dirección via Reactor:
+        cluster info + exposure por categoría + exposure por servicio + counterparties.
+        """
+        cluster = self.get_cluster_info(address, asset)
+        exposure_cat = self.get_exposure_by_category(address, asset, "received")
+        exposure_svc = self.get_exposure_by_service(address, asset, "received")
+        counterparties = self.get_cluster_counterparties(address, asset, "received")
+
+        return {
+            "address": address,
+            "cluster": cluster,
+            "exposure_by_category": exposure_cat,
+            "exposure_by_service": exposure_svc,
+            "counterparties": counterparties,
+        }

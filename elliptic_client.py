@@ -34,6 +34,21 @@ class EllipticClient:
 
     BASE_URL = "https://aml-api.elliptic.co"
 
+    # Categorías que Elliptic clasifica como riesgo alto
+    RISK_CATEGORIES = {
+        "dark market", "darknet", "darknet marketplace",
+        "mixer", "tumbler", "mixing",
+        "ransomware", "malware",
+        "scam", "fraud", "theft", "stolen funds",
+        "terrorist financing", "terrorism",
+        "sanctioned entity", "sanctions", "ofac",
+        "child exploitation", "csam",
+        "cybercriminal", "hacking",
+        "token blacklisting",
+        "gambling",
+        "illicit",
+    }
+
     def __init__(self, api_key: str, api_secret: str, timeout: int = 30):
         self.api_key = api_key
         self.api_secret = api_secret
@@ -47,7 +62,7 @@ class EllipticClient:
         message = timestamp + method.upper() + path.lower() + body
         secret_decoded = base64.b64decode(self.api_secret)
         signature = base64.b64encode(
-            hmac.new(secret_decoded, message.encode("utf-8"), hashlib.sha256).digest()
+            hmac.HMAC(secret_decoded, message.encode("utf-8"), hashlib.sha256).digest()
         ).decode("utf-8")
 
         return {
@@ -57,29 +72,39 @@ class EllipticClient:
             "Content-Type": "application/json",
         }
 
-    def _request(self, method: str, path: str, payload: dict = None) -> dict:
-        """Ejecuta request autenticado contra Elliptic API."""
+    def _request(self, method: str, path: str, payload: dict = None,
+                 retries: int = 3) -> dict:
+        """Ejecuta request autenticado contra Elliptic API con retry."""
         body = ""
         if payload is not None:
             # CRUCIAL: separators compactos para que el signature coincida
             body = json.dumps(payload, separators=(",", ":"))
 
-        headers = self._sign(method, path, body)
-        url = f"{self.BASE_URL}{path}"
+        for attempt in range(retries):
+            # Re-firmar en cada intento (timestamp cambia)
+            headers = self._sign(method, path, body)
+            url = f"{self.BASE_URL}{path}"
 
-        try:
-            if method == "GET":
-                r = requests.get(url, headers=headers, timeout=self.timeout)
-            elif method == "POST":
-                r = requests.post(url, headers=headers, data=body, timeout=self.timeout)
-            else:
-                raise ValueError(f"Método no soportado: {method}")
+            try:
+                if method == "GET":
+                    r = requests.get(url, headers=headers, timeout=self.timeout)
+                elif method == "POST":
+                    r = requests.post(url, headers=headers, data=body, timeout=self.timeout)
+                else:
+                    raise ValueError(f"Método no soportado: {method}")
 
-            logger.debug(f"[{r.status_code}] {method} {path}")
+                logger.debug(f"[{r.status_code}] {method} {path}")
 
-            if r.status_code in (200, 201):
-                return r.json()
-            else:
+                if r.status_code in (200, 201):
+                    return r.json()
+
+                # Retry en errores de servidor (5xx) o rate limit (429)
+                if r.status_code in (429, 500, 502, 503, 504) and attempt < retries - 1:
+                    wait = 2 ** (attempt + 1)
+                    logger.warning(f"Elliptic {r.status_code}, retrying in {wait}s...")
+                    time.sleep(wait)
+                    continue
+
                 error_body = r.text
                 try:
                     error_body = r.json()
@@ -88,12 +113,17 @@ class EllipticClient:
                 logger.error(f"Elliptic API error {r.status_code}: {error_body}")
                 return {"_error": r.status_code, "_body": error_body}
 
-        except requests.exceptions.Timeout:
-            logger.error(f"Elliptic timeout: {method} {path}")
-            return {"_error": "timeout"}
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Elliptic request error: {e}")
-            return {"_error": "request_exception", "_detail": str(e)}
+            except requests.exceptions.Timeout:
+                if attempt < retries - 1:
+                    wait = 2 ** (attempt + 1)
+                    logger.warning(f"Elliptic timeout, retrying in {wait}s...")
+                    time.sleep(wait)
+                    continue
+                logger.error(f"Elliptic timeout after {retries} attempts: {method} {path}")
+                return {"_error": "timeout"}
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Elliptic request error: {e}")
+                return {"_error": "request_exception", "_detail": str(e)}
 
     # ── TX Analysis (Source of Funds) ──────────────────────
 
@@ -224,14 +254,7 @@ class EllipticClient:
             if category:
                 source_of_funds[category] = source_of_funds.get(category, 0) + contribution_pct
 
-            # Identificar entidades blacklisted (categorías de riesgo)
-            risk_categories = {
-                "dark market", "darknet", "mixer", "tumbler",
-                "ransomware", "scam", "fraud", "theft",
-                "terrorist financing", "sanctioned entity",
-                "child exploitation", "cybercriminal",
-            }
-            if any(rc in category.lower() for rc in risk_categories):
+            if any(rc in category.lower() for rc in self.RISK_CATEGORIES):
                 blacklisted.append({
                     "name": name,
                     "category": category,
@@ -240,6 +263,7 @@ class EllipticClient:
                     "indirect_pct": indirect_pct,
                     "min_hops": min_hops,
                     "is_vasp": is_vasp,
+                    "was_removed": entity.get("was_removed", False),
                 })
 
         return {
@@ -276,14 +300,7 @@ class EllipticClient:
             if category:
                 exposures[category] = exposures.get(category, 0) + contribution_pct
 
-            # Entidades de riesgo
-            risk_categories = {
-                "dark market", "darknet", "mixer", "tumbler",
-                "ransomware", "scam", "fraud", "theft",
-                "terrorist financing", "sanctioned entity",
-                "child exploitation", "cybercriminal",
-            }
-            if any(rc in category.lower() for rc in risk_categories):
+            if any(rc in category.lower() for rc in self.RISK_CATEGORIES):
                 risk_entities.append({
                     "name": name,
                     "category": category,
