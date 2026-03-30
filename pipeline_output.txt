@@ -1,0 +1,566 @@
+
+================================================================================
+  VECTORA AML MONITOR — PIPELINE COMPLETO
+  TX: dc628aae13d57b7099e613f6e0fe433845a8707650b3bff960328d7e0bdefd29
+  Sender: THwHh6EJCPZ9G2c4YysSiaen1hmDcvnjND
+  Receiver: THaEwWojvq5PatoRCa4pYThZm8zW88pj2p
+  Client: DELTEX
+  Timestamp: 2026-03-30T18:00:59.437898
+================================================================================
+
+
+================================================================================
+  PASO 0: INFO ON-CHAIN DE LA TX (TronGrid)
+================================================================================
+
+  Consultando TX en TronGrid...
+
+  TX Events:
+{
+  "data": [
+    {
+      "block_number": 81403924,
+      "block_timestamp": 1774879089000,
+      "caller_contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+      "contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+      "event_index": 0,
+      "event_name": "Transfer",
+      "result": {
+        "0": "0x576416ebb0dd988e8dad58c6ff81a7c218f2bae6",
+        "1": "0x53690ec26dca1be9510280d21f65b7e0bcaf21c7",
+        "2": "90000000000",
+        "from": "0x576416ebb0dd988e8dad58c6ff81a7c218f2bae6",
+        "to": "0x53690ec26dca1be9510280d21f65b7e0bcaf21c7",
+        "value": "90000000000"
+      },
+      "result_type": {
+        "from": "address",
+        "to": "address",
+        "value": "uint256"
+      },
+      "event": "Transfer(address indexed from, address indexed to, uint256 value)",
+      "transaction_id": "dc628aae13d57b7099e613f6e0fe433845a8707650b3bff960328d7e0bdefd29"
+    }
+  ],
+  "success": true,
+  "meta": {
+    "at": 1774893659754,
+    "page_size": 1
+  }
+}
+
+  Consultando historial TRC20 del sender THwHh6EJCPZ9G2c4YysSiaen1hmDcvnjND...
+  Encontradas 20 transacciones TRC20 del sender
+    2026-03-30 15:49 | SENT | $93,480.00 USDT | TDhA4FPmZrRuGNB7... | tx:cb01de0d03816880...
+    2026-03-30 15:49 | SENT | $3.25 USDT | TDii6vao7xyWg2rK... | tx:890af0bb713dde7c...
+    2026-03-30 15:49 | RECV | $50,000.00 USDT | TBLPzVBogYtSRhSk... | tx:b72750193d76ad18...
+    2026-03-30 15:30 | RECV | $43,477.00 USDT | TJeBrj1DqX5axUfG... | tx:08793bbfaf659fd0...
+    2026-03-30 15:25 | SENT | $239,000.00 USDT | TDhA4FPmZrRuGNB7... | tx:5e33cd8e9bcc6351...
+
+================================================================================
+  PASO 1: VERIFICACION DE WHITELIST
+================================================================================
+  Cliente: DELTEX
+  Wallet destino (Utila): THaEwWojvq5PatoRCa4pYThZm8zW88pj2p
+  Sender: THwHh6EJCPZ9G2c4YysSiaen1hmDcvnjND
+  Estado whitelist: REGISTRADA (whitelisted)
+  >> No se genera alerta de wallet desconocida
+
+================================================================================
+  PASO 2: CHAINALYSIS KYT — SCREENING DE TX
+================================================================================
+
+  2a. Registrando transfer...
+  [410]
+  Error: Use reactor.chainalysis.com instead
+  !! No se obtuvo externalId, no se puede continuar con KYT
+
+================================================================================
+  PASO 3: CHAINALYSIS ADDRESS SCREENING — SENDER
+================================================================================
+
+  Registrando sender THwHh6EJCPZ9G2c4YysSiaen1hmDcvnjND...
+  Register [201]: {"address":"THwHh6EJCPZ9G2c4YysSiaen1hmDcvnjND"}
+
+  Consultando cluster + risk...
+  [200]
+
+  Address Screening - Sender:
+{
+  "address": "THwHh6EJCPZ9G2c4YysSiaen1hmDcvnjND",
+  "risk": "Medium",
+  "cluster": null,
+  "riskReason": "> 0% direct exposure to Stolen Funds",
+  "addressType": "PRIVATE_WALLET",
+  "addressIdentifications": [],
+  "exposures": [
+    {
+      "category": "atm",
+      "value": 26.44,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "bridge",
+      "value": 49022.74,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "decentralized exchange",
+      "value": 4817.22,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "escort service",
+      "value": 279.74,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "exchange",
+      "value": 8598.09955,
+      "exposureType": "direct",
+      "direction": "both_directions"
+    },
+    {
+      "category": "exchange",
+      "value": 3448223.81955,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "fee",
+      "value": 3.49455,
+      "exposureType": "direct",
+      "direction": "both_directions"
+    },
+    {
+      "category": "fee",
+      "value": 4.42455,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "fraud shop",
+      "value": 4.19,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "gambling",
+      "value": 19922.38,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "hosted wallet",
+      "value": 6414.79,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "illicit actor-org",
+      "value": 15718.35,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "infrastructure as a service",
+      "value": 4.68,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "instant exchange",
+      "value": 16623.98,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "institutional platform",
+      "value": 65141.75,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "lending",
+      "value": 1521.51,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "merchant services",
+      "value": 22614.42,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "mining pool",
+      "value": 58.8,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "no kyc exchange",
+      "value": 37347.62,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "other",
+      "value": 8746.48,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "p2p exchange",
+      "value": 1251.28,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "protocol privacy",
+      "value": 12.12,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "sanctioned entity",
+      "value": 1559.52,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "sanctioned jurisdiction",
+      "value": 1246.55,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "scam",
+      "value": 245.41,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "smart contract",
+      "value": 101345.93,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "special measures",
+      "value": 757.31,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "stolen funds",
+      "value": 9991.03027,
+      "exposureType": "direct",
+      "direction": "both_directions"
+    },
+    {
+      "category": "stolen funds",
+      "value": 10044.94027,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "terrorist financing",
+      "value": 26.79,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "unnamed service",
+      "value": 82.95078,
+      "exposureType": "direct",
+      "direction": "both_directions"
+    },
+    {
+      "category": "unnamed service",
+      "value": 9849.84078,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    },
+    {
+      "category": "unspent",
+      "value": 860879.84,
+      "exposureType": "indirect",
+      "direction": "both_directions"
+    }
+  ],
+  "triggers": [
+    {
+      "category": "stolen funds",
+      "percentage": 0.213314,
+      "message": "> 0% direct exposure to stolen funds",
+      "ruleTriggered": {
+        "risk": "Medium",
+        "minThreshold": 0.0,
+        "maxThreshold": 0.1,
+        "exposureType": "direct",
+        "direction": "both_directions"
+      }
+    }
+  ],
+  "status": "COMPLETE"
+}
+
+================================================================================
+  PASO 4: CHAINALYSIS SANCTIONS — OFAC CHECK
+================================================================================
+
+  Checking Sender: THwHh6EJCPZ9G2c4YysSiaen1hmDcvnjND
+  [200]
+  CLEAN — No sanctions matches
+
+  Checking Receiver: THaEwWojvq5PatoRCa4pYThZm8zW88pj2p
+  [200]
+  CLEAN — No sanctions matches
+
+================================================================================
+  PASO 5: BACKWARD TRACE ON-CHAIN (TronGrid, 2 hops)
+================================================================================
+
+  HOP 1: Senders de THwHh6EJCPZ9G2c4...
+  Encontrados: 29 senders únicos
+    TBLPzVBogYtSRhSkUgpBAyhCtM988YZF3h | $50,000.00 USDT
+    TJeBrj1DqX5axUfG927mWZqdkZVwB2K5qo | $43,477.00 USDT
+    TYUc3Q63d8Ki9BJC7DaLZ7QSoFxysSQDrg | $56,523.32 USDT
+    TW6i5TFE6nmzRMq2XvkrPsGekc1ajx9vSe | $6,600.00 USDT
+    TSXL9wEYbLyZrSqLxGjX29QPwnSipuFhWT | $163,795.00 USDT
+    TTtmnDL99YMkzLZuqRgTMT4dBABFCooAGb | $132,004.00 USDT
+    TDhA44MQdtoGb6apmqehgBbnqxBK28XN4m | $1.20 USDT
+    TTZhnKsUDznifgLuqdpQxaNfHrWTBtWBVh | $41,450.00 USDT
+    TDqSquXBgUCLYvYC4XZgrprLK589dkhSCf | $3,999.00 USDT
+    TS1AxVLc3UEPwKByrPH27ypvR9MxAdrZVW | $10,000.00 USDT
+    TJmFnfGmPyqNMpX6k18cwm8iiEh4MRKgaA | $50,000.00 USDT
+    TB2HtNEFit6YWNnA1NdxEb2SSLesEEDfdL | $100,000.00 USDT
+    TLby4QLtwsKUFhg2tFPuh8bsidNWB2K5qo | $2.00 USDT
+    TFnRaActWq6FTWbki7EhxDCCpsF4rA1rCB | $100,000.00 USDT
+    TAyfTfpWsCMx3CVwMbNi38YdSuQfCsvouZ | $5,736.00 USDT
+    ... y 14 más
+
+  HOP 2: Senders de los top 5 de hop 1...
+
+    Tracing TSXL9wEYbLyZrSqL... ($163,795.00)
+    → 0 senders
+
+    Tracing TQYLscTYtzJgCgi7... ($150,000.00)
+    → 0 senders
+
+    Tracing TTtmnDL99YMkzLZu... ($132,004.00)
+    → 0 senders
+
+    Tracing TB2HtNEFit6YWNnA... ($100,000.00)
+    → 0 senders
+
+    Tracing TFnRaActWq6FTWbk... ($100,000.00)
+    → 0 senders
+
+  RESUMEN TRACE:
+    Hop 1: 29 senders
+    Hop 2: 0 senders
+    Total addresses únicas: 29
+
+================================================================================
+  PASO 6: SCREENING DE WALLETS DEL TRACE
+================================================================================
+  Screening 29 wallets hop1 + 0 wallets hop2
+
+  ------------------------------------------------------------
+  HOP1 | TBLPzVBogYtSRhSkUgpBAyhCtM988YZF3h
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TJeBrj1DqX5axUfG927mWZqdkZVwB2K5qo
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TYUc3Q63d8Ki9BJC7DaLZ7QSoFxysSQDrg
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TW6i5TFE6nmzRMq2XvkrPsGekc1ajx9vSe
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TSXL9wEYbLyZrSqLxGjX29QPwnSipuFhWT
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TTtmnDL99YMkzLZuqRgTMT4dBABFCooAGb
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TDhA44MQdtoGb6apmqehgBbnqxBK28XN4m
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TTZhnKsUDznifgLuqdpQxaNfHrWTBtWBVh
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TDqSquXBgUCLYvYC4XZgrprLK589dkhSCf
+  Address Screening: risk=Low, cluster=Binance.com (exchange)
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TS1AxVLc3UEPwKByrPH27ypvR9MxAdrZVW
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TJmFnfGmPyqNMpX6k18cwm8iiEh4MRKgaA
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TB2HtNEFit6YWNnA1NdxEb2SSLesEEDfdL
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TLby4QLtwsKUFhg2tFPuh8bsidNWB2K5qo
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TFnRaActWq6FTWbki7EhxDCCpsF4rA1rCB
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TAyfTfpWsCMx3CVwMbNi38YdSuQfCsvouZ
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TRnQcwe19rtRVTmiDnJTHA3oUXUR29wg1y
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TRSncteN7zmEaU1CFNVjFqKCgQZuGV5Guq
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TA45PaTxd89ps8H8s3UKZJ1vhX8VkpJVic
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TB7GNyBJUy1bVvj9eujkNAPKGEgDYU5gTt
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TBLPy1zs113YxpVoDgZMhqTn2KbD8YZF3h
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TPrRwCLRkNrRdeeaoytE4gxHJnhd5FhLon
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TBLPrcCyJZJfGvAFpXM8ZFTWNZPS8YZF3h
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TVhxfprqVAgd7FKeSc9SVbytF2H6xzmhg8
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TGguXMotCTArLYW7RprS6eP1qqSdahDRCD
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TKw7QnYwcVWpxtKubaoFGdpxzcVEQBVnLG
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TQYLscTYtzJgCgi7oUo3MfoeyyrEiqKPsd
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TNET7XdTF8mYJHosgm7rXTF79t8n1F5EkN
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TRMidLLaAqDMuFvd6LSXV5Pm5nGJDiFHBr
+  Address Screening error: 'NoneType' object has no attribute 'get'
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+  ------------------------------------------------------------
+  HOP1 | TVb8S91TdV7BquJPDx7fwWG5GMotjAxLnN
+  Address Screening: risk=High, cluster=Reported as stolen funds TVb8S9 (stolen funds)
+  Sanctions: CLEAN
+  Tether Blacklist: CLEAN
+
+------------------------------------------------------------
+  RESUMEN SCREENING WALLETS:
+    Total screened: 29
+    Sanctioned: 0
+    Tether blacklisted: 0
+    High/Severe risk: 1
+
+================================================================================
+  PASO 7: KYT CATEGORIES (referencia)
+================================================================================
+
+================================================================================
+  PIPELINE COMPLETO
+  Tiempo total: 82.7s
+  TX: dc628aae13d57b7099e613f6e0fe433845a8707650b3bff960328d7e0bdefd29
+  Client: DELTEX
+================================================================================
+
