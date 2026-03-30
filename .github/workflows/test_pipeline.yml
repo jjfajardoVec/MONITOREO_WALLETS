@@ -1,0 +1,18 @@
+name: Test AML Pipeline
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests
+      - name: Run Pipeline Test
+        env:
+          CHAINALYSIS_KYT_KEY: ${{ secrets.CHAINALYSIS_KYT_KEY }}
+          CHAINALYSIS_SANCTIONS_KEY: ${{ secrets.CHAINALYSIS_SANCTIONS_KEY }}
+        run: python3 test_pipeline_deltex.py
